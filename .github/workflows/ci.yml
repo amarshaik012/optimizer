@@ -1,0 +1,44 @@
+name: Optimizer CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - name: Install dependencies
+      run: pip install pytest
+
+    - name: Run dummy tests
+      run: |
+        echo "Running dummy tests"
+        mkdir -p tests
+        echo "def test_dummy(): assert 1==1" > tests/test_dummy.py
+        pytest tests > result.log || true
+
+    - name: Generate build data
+      run: |
+        DURATION=$((RANDOM % 10 + 1))
+        TESTS_RUN=1
+        TESTS_FAILED=$((RANDOM % 2))
+        STATUS="Pass"
+        if [ $TESTS_FAILED -gt 0 ]; then STATUS="Fail"; fi
+        echo "Build_ID=${GITHUB_RUN_ID},Build_Status=$STATUS,Duration=${DURATION},Tests_Run=${TESTS_RUN},Tests_Failed=${TESTS_FAILED}" >> build_data.csv
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: build_data
+        path: build_data.csv
