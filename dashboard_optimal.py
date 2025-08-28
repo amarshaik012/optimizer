@@ -62,61 +62,53 @@ st.markdown("<h1 style='text-align:center;'> CI/CD Build Optimizer Dashboard</h1
 
 # --- DASHBOARD CONTENT ---
 if not df.empty:
-    # --- COLUMNS DETECTED ---
+    # Columns
     st.subheader(" Columns Detected")
     col_boxes = st.columns(len(df.columns))
     for i, c in enumerate(df.columns):
         col_boxes[i].markdown(f"<div class='metric-box'>{c}</div>", unsafe_allow_html=True)
 
-    # --- DATA TABLE ---
+    # Data Table
     st.subheader(" Build Data")
     st.dataframe(df)
 
-    # --- VALIDATE DATA ---
+    # Validate Data
     required_cols = ["Duration", "Tests_Run", "Tests_Failed", "Build_Status"]
     if not all(col in df.columns for col in required_cols):
         st.error(f"Required columns {required_cols} not found! Check CSV.")
     else:
-        # Ensure numeric cols
         df[["Duration", "Tests_Run", "Tests_Failed"]] = df[["Duration", "Tests_Run", "Tests_Failed"]].apply(pd.to_numeric, errors='coerce')
         df = df.dropna(subset=["Duration", "Tests_Run", "Tests_Failed"])
-
-        # Normalize Build_Status
         df["Build_Status"] = df["Build_Status"].astype(str).str.strip().str.title()
 
-        # --- SUMMARY ---
+        # Summary
         st.subheader("📈 Summary Statistics")
         st.dataframe(df.describe().transpose())
 
-        # --- BUILD STATUS DISTRIBUTION ---
+        # Build Status Distribution
         st.subheader("📌 Build Status Distribution")
-        fig1 = px.histogram(
-            df, x="Build_Status", color="Build_Status",
-            title="Build Outcomes",
-            color_discrete_sequence=px.colors.qualitative.Set2,
-            template="simple_white"
-        )
+        fig1 = px.histogram(df, x="Build_Status", color="Build_Status",
+                            title="Build Outcomes",
+                            color_discrete_sequence=px.colors.qualitative.Set2,
+                            template="simple_white")
         st.plotly_chart(fig1, use_container_width=True)
 
-        # --- DURATION TREND ---
+        # Duration Trend
         st.subheader("⏱ Build Duration Trend")
-        fig2 = px.line(
-            df, y="Duration",
-            title="Build Duration Over Time",
-            color_discrete_sequence=["#0077b6"],
-            template="simple_white"
-        )
+        fig2 = px.line(df, y="Duration",
+                       title="Build Duration Over Time",
+                       color_discrete_sequence=["#0077b6"],
+                       template="simple_white")
         st.plotly_chart(fig2, use_container_width=True)
 
-        # --- MODEL TRAINING ---
+        # Model Training
         if len(df) > 0:
             X = df[["Duration", "Tests_Run", "Tests_Failed"]]
             y = df["Build_Status"].map({"Pass": 1, "Fail": 0})
-
             model = RandomForestClassifier(n_estimators=100, random_state=42)
             model.fit(X, y)
 
-            # --- PREDICTION FORM ---
+            # Prediction Form
             st.subheader("🤖 Predict Build Outcome")
             duration = st.number_input("Duration (seconds)", min_value=0, value=5)
             tests_run = st.number_input("Tests Run", min_value=1, value=1)
@@ -137,13 +129,13 @@ def webhook():
     data = request.json
     print("✅ Webhook received:", data)
 
-    # 👉 Run your build data generator
+    # Run your build generator script (or merge CSVs here)
     os.system("python generate_builds.py")
 
     return jsonify({"status": "optimizer triggered"}), 200
 
 def run_flask():
-    app.run(port=5000, debug=False, use_reloader=False)
+    app.run(port=6060, debug=False, use_reloader=False)  # 🔹 updated port to 6060
 
-# Run Flask in background so Streamlit UI continues
+# Run Flask in background thread
 threading.Thread(target=run_flask, daemon=True).start()
