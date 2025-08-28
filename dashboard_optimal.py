@@ -63,7 +63,7 @@ st.markdown("<h1 style='text-align:center;'> CI/CD Build Optimizer Dashboard</h1
 # --- DASHBOARD CONTENT ---
 if not df.empty:
     # --- COLUMNS DETECTED ---
-    st.subheader("📊 Columns Detected")
+    st.subheader(" Columns Detected")
     col_boxes = st.columns(len(df.columns))
     for i, c in enumerate(df.columns):
         col_boxes[i].markdown(f"<div class='metric-box'>{c}</div>", unsafe_allow_html=True)
