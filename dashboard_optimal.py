@@ -69,7 +69,7 @@ if not df.empty:
         col_boxes[i].markdown(f"<div class='metric-box'>{c}</div>", unsafe_allow_html=True)
 
     # --- DATA TABLE ---
-    st.subheader("📁 Build Data")
+    st.subheader(" Build Data")
     st.dataframe(df)
 
     # --- VALIDATE DATA ---
